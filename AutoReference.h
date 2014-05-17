@@ -6,7 +6,7 @@
 namespace cpp_ctti
 {
 
-	struct AutoReferenceBase
+   struct AutoReferenceBase
    {
       virtual unsigned typeID() = 0;
    };
@@ -31,21 +31,34 @@ namespace cpp_ctti
       virtual unsigned typeID() { return types::_typeID<U>(); }
       virtual std::string typeName()
       {
-          std::string funcName(__PRETTY_FUNCTION__);
-          std::string::size_type found = funcName.find("with U = ");
-          if (found!=std::string::npos)
-          {
+#if defined (_MSC_VER)
+         std::string funcName(__FUNCSIG__);
+         std::string::size_type found = funcName.find("AutoReference<");
+         if (found!=std::string::npos)
+         {
+            std::string type(funcName.substr(found+14));
+            std::string::size_type found2 = type.find(">");
+            if (found2!=std::string::npos)
+            {
+               return type.substr(0,found2);
+            }
+         }
+         return funcName;
+#else
+         std::string funcName(__PRETTY_FUNCTION__);
+         std::string::size_type found = funcName.find("with U = ");
+         if (found!=std::string::npos)
+         {
             std::string type(funcName.substr(found+9));
             std::string::size_type found2 = type.find(";");
             if (found2!=std::string::npos)
             {
-                return type.substr(0,found2);
+               return type.substr(0,found2);
             }
-            else
-               return "U";
-          }
-          else
-             return "U";
+         }
+         return funcName;
+#endif
+         return "U";
       }
    private:
       U& mObject;
